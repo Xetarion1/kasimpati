@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasımpatı Bahçesi</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            background-color: black;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- YENİ: Başlangıç Ekranı --- */
+        #welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: 'Georgia', serif;
+            transition: opacity 1s ease; /* Yavaşça kaybolma efekti */
+        }
+
+        #enter-button {
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            color: white;
+            background-color: transparent;
+            border: 1px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #enter-button:hover {
+            background-color: white;
+            color: black;
+        }
+
+        /* --- YENİ: Ana İçerik (Başlangıçta Gizli) --- */
+        #main-content {
+            display: none; /* JavaScript ile gösterilecek */
+        }
+
+
+        /* --- Yıldızlar ve Çiçek (Aynen kaldı) --- */
+        .shooting-star {
+            position: absolute;
+            top: 50px; /* Başlangıç yüksekliği */
+            left: -100px; /* Ekranın solundan başlasın */
+            width: 80px; /* Kuyruk uzunluğu */
+            height: 1px;
+            background: linear-gradient(to right, white, transparent);
+            opacity: 0;
+            z-index: 2; /* Diğer yıldızların önünde olabilir */
+
+            /* Animasyon: 'shoot' adında, 5 saniye sürsün, 
+            doğrusal gitsin, sonsuz tekrar etsin */
+            animation: shoot 5s linear infinite;
+            
+            /* Her kayan yıldız farklı zamanda başlasın */
+            animation-delay: 3s; /* Bu ilki 3 saniye sonra başlar */
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1; /* Görünür ol */
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                /* Ekranın genişliğinin 3 katı kadar gitsin */
+                transform: translateX(300vw); 
+                opacity: 0; /* Kaybol */
+            }
+        }
+
+        /* Layer for shooting stars so they can be rendered above other elements */
+        #shooting-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999; /* very front */
+            pointer-events: none; /* don't block clicks */
+        }
+
+        #star-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+
+        .dot {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+        }
+
+        @keyframes twinkle-bright {
+            0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; }
+        }
+        
+        @keyframes twinkle-dim {
+            0% { opacity: 0; } 50% { opacity: 0.4; } 100% { opacity: 0; }
+        }
+
+        @keyframes sway {
+            /* Only rotate during sway. We avoid re-setting translateX/translateY here so
+               it composes with the existing transform preserved by the slideUp 'forwards'. */
+            0% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+            50% { transform: translateX(-50%) translateY(0) rotate(1.5deg); }
+            100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+        }
+
+
+          #flower-container {
+                position: fixed;
+                /* Start visually off-screen by translating on Y instead of using bottom.
+                    This keeps left:50% + translateX(-50%) stable so the element doesn't "teleport". */
+                left: 50%;
+                bottom: 10%; /* final visual baseline — kept for layout fallback */
+                z-index: 10;
+
+                /* Base transform centers the element horizontally. slideUp will animate translateY
+                    from a large positive value (off-screen) to 0. */
+                transform: translateX(-50%) translateY(200vh);
+                transform-origin: bottom center; /* rotate around bottom so sway looks natural */
+
+                /* Two animations: slideUp (moves translateY to 0), then sway rotates continuously.
+                    slideUp uses 'forwards' so the final transform (translateY(0)) is retained and
+                    combined with the initial translateX(-50%). */
+                animation:
+                     slideUp 1.5s ease-out 2s forwards,
+                     sway 4s ease-in-out infinite 3.5s;
+          }
+
+        #bouquet-image {
+            width: 650px;
+            height: auto;
+            display: block;
+        }
+
+        @keyframes slideUp {
+            /* Animate translateY from off-screen (200vh) to 0. Because we set the element's
+               initial transform to translateY(200vh), animating to translateY(0) makes it rise
+               smoothly from the center without jumping horizontally. */
+            from { transform: translateX(-50%) translateY(200vh); }
+            to { transform: translateX(-50%) translateY(0); }
+        }
+
+        #quote-container {
+            position: fixed;
+            top: 20%; /* Yüksekliği ayarlayabilirsiniz */
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, .8); /* Çok parlak olmayan bir beyaz */
+            font-family: 'Georgia', serif; /* Şiirsel bir font */
+            font-size: 1.2rem;
+            font-style: italic;
+            z-index: 11;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            
+            /* Animasyon: */
+            opacity: 0; /* Başlangıçta gizli */
+            animation: fadeIn 3s ease 4s forwards;
+            /* (4s gecikme = çiçek yükseldikten biraz sonra) */
+        }
+
+@keyframes fadeIn {
+    to {
+        opacity: 0.7;
+    }
+}
+        
+    </style>
+</head>
+<body>
+
+    <div id="welcome-overlay">
+        <h2>Kasımpatı Bahçesi</h2>
+        <p>En iyi deneyim için sesleri açın.</p>
+        <button id="enter-button">Başlat</button>
+    </div>
+
+        <div id="main-content">
+        <div id="star-container">
+            <!-- Tek bir örnek statik element yerine, JS ile aralıklı olarak ateş yıldızları oluşturacağız. -->
+        </div>
+        <!-- Üst katman: kayan yıldızların en önde render edilmesi için -->
+        <div id="shooting-layer"></div>
+    
+        <div id="flower-container">
+            <img src="flower.png" alt="Kasımpatı Buketi" id="bouquet-image">
+        </div>
+        <div id="quote-container">
+            <p>İlk kasım, ilk kasımpatın. Ne son kasım ne de son kasımpatın...</p>
+        </div>
+    </div>
+
+    <audio id="background-music" loop>
+        <source src="ses.mp3" type="audio/mpeg">
+        Tarayıcınız ses çalmayı desteklemiyor.
+    </audio>
+
+
+    <script>
+        // (Yıldız oluşturan kod burada... 
+        //  Kısaltma için eklemedim, siz kendi kodunuzdaki gibi bırakın)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('star-container')) { // Sadece ana içerik yüklendiğinde çalışsın
+                const starContainer = document.getElementById('star-container');
+                const numberOfStars = 200; 
+                for (let i = 0; i < numberOfStars; i++) {
+                    const dot = document.createElement('div');
+                    dot.classList.add('dot');
+                    dot.style.top = Math.random() * 100 + '%';
+                    dot.style.left = Math.random() * 100 + '%';
+                    const size = Math.floor(Math.random() * 3) + 1; 
+                    dot.style.width = size + 'px';
+                    dot.style.height = size + 'px';
+                    const animationName = (Math.random() < 0.7) ? 'twinkle-bright' : 'twinkle-dim';
+                    dot.style.animationName = animationName;
+                    dot.style.animationDuration = (Math.random() * 5 + 3) + 's';
+                    dot.style.animationDelay = (Math.random() * 5) + 's';
+                    starContainer.appendChild(dot);
+                }
+
+                // Shooting star generator: creates a .shooting-star element at random intervals
+                function spawnShootingStar() {
+                    const s = document.createElement('div');
+                    s.className = 'shooting-star';
+
+                    // Randomize vertical start a bit
+                    const top = Math.random() * 40 + 10; // 10% - 50%
+                    s.style.top = top + '%';
+
+                    // Randomize duration and delay for variety
+                    const duration = Math.random() * 3 + 3; // 3s - 6s
+                    s.style.animationDuration = duration + 's';
+                    s.style.animationDelay = '0s';
+
+                    // Append to the front-most layer if present
+                    const shootingLayer = document.getElementById('shooting-layer');
+                    const parent = shootingLayer || starContainer;
+                    parent.appendChild(s);
+
+                    // Remove after animation ends
+                    s.addEventListener('animationend', () => {
+                        s.remove();
+                    });
+
+                    // Schedule next shooting star
+                    const nextIn = Math.random() * 7000 + 3000; // 3s - 10s
+                    setTimeout(spawnShootingStar, nextIn);
+                }
+
+                // Start the sequence after a short delay so it doesn't clash with entry animations
+                setTimeout(spawnShootingStar, 3000);
+            }
+        });
+    </script>
+    
+    <script>
+        // Sayfa yüklendiğinde butonu ve diğer elementleri seç
+        const enterButton = document.getElementById('enter-button');
+        const welcomeOverlay = document.getElementById('welcome-overlay');
+        const mainContent = document.getElementById('main-content');
+        const music = document.getElementById('background-music');
+
+        // Butona tıklandığında...
+        enterButton.addEventListener('click', function() {
+            
+            // 1. Sesi başlat
+            music.play();
+            
+            // 2. Başlangıç ekranını yavaşça gizle
+            welcomeOverlay.style.opacity = '0';
+            
+            // 3. Ana içeriği (yıldızlar ve çiçeği) görünür yap
+            mainContent.style.display = 'block';
+
+            // 4. Kaybolma animasyonu bittikten sonra (1sn) 
+            //    başlangıç ekranını tamamen kaldır
+            setTimeout(() => {
+                welcomeOverlay.style.display = 'none';
+            }, 1000); 
+        });
+    </script>
+
+</body>
+</html>
